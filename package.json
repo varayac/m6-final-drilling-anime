@@ -1,0 +1,11 @@
+{
+	"name": "m6-final-drilling-anime",
+	"version": "1.0.0",
+	"description": "Project final drilling m6 - anime crud",
+	"main": "index.js",
+	"scripts": {
+		"test": "mocha"
+	},
+	"author": "varayac",
+	"license": "ISC"
+}
