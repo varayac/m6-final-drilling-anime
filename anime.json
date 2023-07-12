@@ -28,5 +28,11 @@
 		"genero": "Mecha",
 		"anio": "1995",
 		"autor": "Yoshiyuki Sadamoto"
+	},
+	"6": {
+		"nombre": "Samurai X",
+		"genero": "Shonen",
+		"anio": "1996",
+		"autor": "Nobuhiro Watsuki"
 	}
 }

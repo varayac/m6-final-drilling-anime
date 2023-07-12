@@ -1,3 +1,4 @@
+const { error } = require('console');
 const express = require('express');
 const { engine } = require('express-handlebars');
 const fs = require('fs/promises');
@@ -60,8 +61,56 @@ app.get('/create', async (req, res) => {
 	}
 });
 
+// Actualizar Anime
+app.get('/update/:id', async (req, res) => {
+	const id = req.params.id;
+	try {
+		const nombre = req.query.name;
+		const genero = req.query.gender;
+		const anio = req.query.year;
+		const autor = req.query.author;
+		const animeFile = JSON.parse(await fs.readFile(__dirname + '/anime.json'));
+		const anime = animeFile[id];
+
+		if (anime) {
+			anime.nombre = nombre;
+			anime.genero = genero;
+			anime.anio = anio;
+			anime.autor = autor;
+			await fs.writeFile(__dirname + '/anime.json', JSON.stringify(animeFile, null, 3));
+			res.status(201).render('home', { anime: [anime] });
+		} else {
+			res.status(404).send('No se encontro el anime');
+		}
+	} catch (error) {
+		console.log(error.message);
+		res.status(500).send(error.message);
+	}
+});
+
+// Eliminar Anime
+app.get('/delete/:id', async (req, res) => {
+	const id = req.params.id;
+	try {
+		const animeFile = JSON.parse(await fs.readFile(__dirname + '/anime.json'));
+		const anime = animeFile[id];
+
+		if (anime) {
+			delete animeFile[id];
+			await fs.writeFile(__dirname + 'anime.json', JSON.stringify(animeFile, null, 3));
+			res.status(201).send('Anime borrado con exito!');
+			// res.status(201).render('home', { anime: [anime] });
+		} else {
+			res.status(404).send('No se encontró el Anime');
+		}
+	} catch (error) {
+		console.log(error);
+		res.status(500).send(error.message);
+	}
+});
+
 // Busqueda por ID.
-app.get('/search/id/:id', async (req, res) => {
+app.get('/search/:id', async (req, res) => {
 	const id = req.params.id;
 	try {
 		const animeFile = JSON.parse(await fs.readFile(__dirname + '/anime.json'));

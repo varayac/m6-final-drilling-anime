@@ -52,19 +52,19 @@ http://localhost:3000/create?name=Rurouni%20Kenshin&gender=Shonen&year=1996&auth
 Actualizar Anime:
 
 ```
-
+http://localhost:3000/update/6?name=Samurai%20X&gender=Shonen&year=1996&author=Nobuhiro%20Watsuki
 ```
 
 Eliminar Anime:
 
 ```
-
+http://localhost:3000/delete/6
 ```
 
 Busqueda por ID:
 
 ```
-http://localhost:3000/search/id/4
+http://localhost:3000/search/4
 ```
 
 Busqueda por Nombre:
