@@ -1,4 +1,3 @@
-const { error } = require('console');
 const express = require('express');
 const { engine } = require('express-handlebars');
 const fs = require('fs/promises');
@@ -21,15 +20,13 @@ app.set('view engine', 'hbs');
 // Configuracion de la carpetas y archivos estaticos.
 app.use('/bootstrap', express.static(__dirname + '/node_modules/bootstrap/dist'));
 
-// Middlewares:
-
 // Rutas:
 // Muestra todo
 app.get('/', async (req, res) => {
 	try {
-		const anime = JSON.parse(await fs.readFile(__dirname + '/anime.json'));
+		const animeFile = JSON.parse(await fs.readFile(__dirname + '/anime.json'));
 		// res.status(201).json(anime);
-		res.status(201).render('home', { anime });
+		res.status(201).render('home', { anime: animeFile });
 	} catch (error) {
 		console.log(error);
 		res.status(500).send(error.message);
@@ -97,9 +94,9 @@ app.get('/delete/:id', async (req, res) => {
 
 		if (anime) {
 			delete animeFile[id];
-			await fs.writeFile(__dirname + 'anime.json', JSON.stringify(animeFile, null, 3));
-			res.status(201).send('Anime borrado con exito!');
-			// res.status(201).render('home', { anime: [anime] });
+			await fs.writeFile(__dirname + '/anime.json', JSON.stringify(animeFile, null, 3));
+			// res.status(201).send('Anime borrado con exito!');
+			res.status(201).render('home', { anime: [anime] });
 		} else {
 			res.status(404).send('No se encontró el Anime');
 		}
@@ -110,12 +107,19 @@ app.get('/delete/:id', async (req, res) => {
 });
 
 // Busqueda por ID.
-app.get('/search/:id', async (req, res) => {
+app.get('/:id', async (req, res) => {
 	const id = req.params.id;
 	try {
+		// json convertido a objeto js
 		const animeFile = JSON.parse(await fs.readFile(__dirname + '/anime.json'));
 		const anime = animeFile[id];
 		// console.log(anime);
+
+		// objeto js convertido a matriz clave valor solo para renderizar y mostrar id
+		/* const animeArray = Object.entries(await anime);
+		const animeList = await animeArray.map(([id, anime]) => ({ id, anime }));
+		const newAnime = animeList[id - 1]; */
+
 		if (anime) {
 			res.status(200).render('home', { anime: [anime] });
 		} else {
@@ -127,14 +131,37 @@ app.get('/search/:id', async (req, res) => {
 	}
 });
 
+/* // Busqueda por ID.
+app.get('/:id', async (req, res) => {
+	const id = req.params.id;
+	try {
+		const animeFile = JSON.parse(await fs.readFile(__dirname + '/anime.json'));
+		const animeKey = Object.keys(animeFile);
+		const key = animeKey[id - 1];
+		const animeValue = animeFile[id];
+		const newAnimeObj = { id: key, anime: animeValue };
+
+		if (animeValue) {
+			// res.status(200).render('home', { id: key, anime: [animeValue] });
+			res.status(200).render('home', { anime: [newAnimeObj] });
+			console.log([newAnimeObj]);
+		} else {
+			res.status(404).send('Anime no encontrado');
+		}
+	} catch (error) {
+		console.log(error);
+		res.status(500).send(error.message);
+	}
+}); */
+
 // Busqueda por nombre.
-app.get('/search/name/:name', async (req, res) => {
+app.get('/search/:name', async (req, res) => {
 	const name = req.params.name.toLowerCase();
 	try {
 		const animeFile = JSON.parse(await fs.readFile(__dirname + '/anime.json'));
-		const anime = Object.values(animeFile).filter((anime) =>
-			anime.nombre.toLowerCase().includes(name)
-		);
+		const anime = Object.values(animeFile);
+		anime.filter((anime) => anime.nombre.toLowerCase().includes(name));
+
 		if (anime.length > 0) {
 			res.status(200).render('home', { anime });
 		} else {

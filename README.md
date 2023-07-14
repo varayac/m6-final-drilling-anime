@@ -64,13 +64,13 @@ http://localhost:3000/delete/6
 Busqueda por ID:
 
 ```
-http://localhost:3000/search/4
+http://localhost:3000/4
 ```
 
 Busqueda por Nombre:
 
 ```
-http://localhost:3000/search/name/neon%20genesis%20evangelion
+http://localhost:3000/search/neon%20genesis%20evangelion
 ```
 
 ---

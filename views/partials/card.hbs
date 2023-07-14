@@ -1,12 +1,25 @@
 <div class="col">
     <div class="card">
       <div class="card-body">
-        <h5 class="card-title">{{ this.nombre }}</h5>
-        <ul>
-            <li class="card-text">Genero: {{ this.genero }}</li>
-            <li>Año: {{ this.anio }}</li>
-            <li>Autor: {{ this.autor }}</li>
-        </ul>
+        <h5 class="card-title">{{!-- {{ this.id }} --}} {{ this.nombre }}</h5>
+        <ul class="list-group">
+                <li class="list-group-item">Género: {{ this.genero }}</li>
+                <li class="list-group-item">Año: {{ this.anio }}</li>
+                <li class="list-group-item">Autor: {{ this.autor }}</li>
+            </ul>
       </div>
     </div>
 </div>
+
+{{!-- <div class="col">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">{{ id }} - {{ anime.nombre }}</h5>
+        <ul class="list-group">
+                <li class="list-group-item">Género: {{ anime.genero }}</li>
+                <li class="list-group-item">Año: {{ anime.anio }}</li>
+                <li class="list-group-item">Autor: {{ anime.autor }}</li>
+            </ul>
+      </div>
+    </div>
+</div> --}}
