@@ -1,25 +1,36 @@
-<div class="col">
-    <div class="card">
-      <div class="card-body">
-        <h5 class="card-title">{{!-- {{ this.id }} --}} {{ this.nombre }}</h5>
-        <ul class="list-group">
-                <li class="list-group-item">Género: {{ this.genero }}</li>
-                <li class="list-group-item">Año: {{ this.anio }}</li>
-                <li class="list-group-item">Autor: {{ this.autor }}</li>
-            </ul>
+{{#if nombre}}
+<div class='col'>
+   <div class='card'>
+      <div class='card-body'>
+         <h5 class='card-title'>{{nombre}}</h5>
+         <ul class='list-group'>
+            <li class='list-group-item'>Género: {{genero}}</li>
+            <li class='list-group-item'>Año: {{anio}}</li>
+            <li class='list-group-item'>Autor: {{autor}}</li>
+         </ul>
       </div>
-    </div>
+   </div>
 </div>
-
-{{!-- <div class="col">
-    <div class="card">
-      <div class="card-body">
-        <h5 class="card-title">{{ id }} - {{ anime.nombre }}</h5>
-        <ul class="list-group">
-                <li class="list-group-item">Género: {{ anime.genero }}</li>
-                <li class="list-group-item">Año: {{ anime.anio }}</li>
-                <li class="list-group-item">Autor: {{ anime.autor }}</li>
-            </ul>
+{{else}}
+{{#each this}}
+<div class='col'>
+   <div class='card'>
+      <div class='card-body'>
+         <div class='d-flex justify-content-between mx-2'>
+            <h5 class='card-title'>ID: {{@key}} </h5>
+            <div>
+               <a href='/update/{{@key}}?nombre={{nombre}}&genero={{genero}}&anio={{anio}}&autor={{autor}}' class=''><i class='bi bi-pencil-square'></i></a>
+               <a href='/delete/{{@key}}' class=''><i class='bi bi-trash'></i></a>
+            </div>
+         </div>
+         <ul class='list-group'>
+            <li class='list-group-item'>Nombre: {{this.nombre}}</li>
+            <li class='list-group-item'>Género: {{this.genero}}</li>
+            <li class='list-group-item'>Año: {{this.anio}}</li>
+            <li class='list-group-item'>Autor: {{this.autor}}</li>
+         </ul>
       </div>
-    </div>
-</div> --}}
+   </div>
+</div>
+{{/each}}
+{{/if}}

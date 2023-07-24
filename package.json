@@ -4,8 +4,10 @@
 	"description": "Project final drilling m6 - anime crud",
 	"main": "index.js",
 	"scripts": {
-		"dev": "./node_modules/.bin/nodemon",
-		"test": "mocha"
+		"dev": "./node_modules/.bin/nodemon --ignore '*.json'",
+		"dev-win": ".\\node_modules\\.bin\\nodemon --ignore '*.json'",
+		"test": "mocha",
+		"manual-test": "./node_modules/.bin/mocha"
 	},
 	"author": "Víctor Araya",
 	"license": "ISC",
@@ -15,6 +17,9 @@
 		"express-handlebars": "^7.0.7"
 	},
 	"devDependencies": {
-		"nodemon": "^1.14.9"
+		"chai": "^4.3.7",
+		"chai-http": "^4.4.0",
+		"mocha": "^10.2.0",
+		"nodemon": "^3.0.1"
 	}
 }

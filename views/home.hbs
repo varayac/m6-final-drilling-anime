@@ -1,5 +1,11 @@
-<div class="row row-cols-1 row-cols-md-3 g-4">
-   {{#each anime}}
-      {{> card }}
-   {{/each}}
-</div>
+<header class="text-center">
+   {{> navbar }}
+   <h1 class="mt-4">Render API</h1>
+   <p>Esta API muestra una lista de Animes extraídos desde un JSON y permite realizar un CRUD utilizando solo método GET.</p>
+</header>
+
+<main class="container">
+   <div class="row row-cols-1 row-cols-md-3 g-4 mt-3">
+      {{> card anime }}
+   </div>
+</main>
