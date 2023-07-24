@@ -1,175 +1,137 @@
 const express = require('express');
-const { engine } = require('express-handlebars');
 const fs = require('fs/promises');
 const app = express();
-
-const HOST = 'http://localhost';
 const PORT = 3000;
 
-// Configuracion del motor de plantillas Handlebars.
-app.engine(
-	'hbs',
-	engine({
-		extname: '.hbs',
-		layoutsDir: __dirname + '/views/layouts/',
-		partialsDir: __dirname + '/views/partials/',
-	})
-);
-app.set('view engine', 'hbs');
+//MIDDLEWARES
+// Servir Archivo JSON
+const animeFileObj = async (req, res, next) => {
+	try {
+		req.animeObj = JSON.parse(await fs.readFile(__dirname + '/anime.json'));
+		next();
+	} catch (error) {
+		return res.status(500).send({ code: 500, error: error.message });
+	}
+};
+app.use(animeFileObj);
 
-// Configuracion de la carpetas y archivos estaticos.
-app.use('/bootstrap', express.static(__dirname + '/node_modules/bootstrap/dist'));
-
-// Rutas:
-// Muestra todo
+// RUTAS GET
+// Listar todo: http://localhost:3000/
 app.get('/', async (req, res) => {
 	try {
-		const animeFile = JSON.parse(await fs.readFile(__dirname + '/anime.json'));
-		// res.status(201).json(anime);
-		res.status(201).render('home', { anime: animeFile });
+		const animeFile = await req.animeObj;
+		res.status(200).json({ code: 200, animes: animeFile });
 	} catch (error) {
-		console.log(error);
-		res.status(500).send(error.message);
+		res.status(500).send({ code: 500, error: error.message });
+	} finally {
+		res.end();
 	}
 });
 
-// Agregar Anime
+// Listar por ID o Nombre: http://localhost:3000/search?search=naruto
+app.get('/search', async (req, res) => {
+	try {
+		const searchTerm = req.query.search.toLowerCase();
+		if (!searchTerm)
+			return res.status(400).send({
+				code: 400,
+				error: 'Error en cliente, parametros incompletos o indefinidos',
+			});
+
+		const animeFile = await req.animeObj;
+		const anime =
+			animeFile[searchTerm] ||
+			Object.values(animeFile).find((anime) => anime.nombre.toLowerCase() === searchTerm);
+
+		if (!anime) {
+			res.status(404).send({ code: 404, error: 'Anime no encontrado!' });
+		} else {
+			res.status(200).json({ code: 200, message: 'Anime encontrado', anime: anime });
+		}
+	} catch (error) {
+		res.status(500).send({ code: 500, error: error.message });
+	} finally {
+		res.end();
+	}
+});
+
+// Crear anime: http://localhost:3000/create?nombre=Rurouni%20Kenshin&genero=Shonen&anio=1996&autor=Nobuhiro%20Watsuki
 app.get('/create', async (req, res) => {
 	try {
-		const animeFile = JSON.parse(await fs.readFile(__dirname + '/anime.json'));
-		const id = Object.keys(animeFile).length + 1;
-		const nombre = req.query.name;
-		const genero = req.query.gender;
-		const anio = req.query.year;
-		const autor = req.query.author;
-
-		const newAnime = {
-			nombre,
-			genero,
-			anio,
-			autor,
-		};
-
-		animeFile[id] = newAnime;
-		await fs.writeFile(__dirname + '/anime.json', JSON.stringify(animeFile, null, 3));
-		res.status(201).render('add', { anime: [newAnime] });
-	} catch (error) {
-		res.status(500).send(error.message);
-	}
-});
-
-// Actualizar Anime
-app.get('/update/:id', async (req, res) => {
-	const id = req.params.id;
-	try {
-		const nombre = req.query.name;
-		const genero = req.query.gender;
-		const anio = req.query.year;
-		const autor = req.query.author;
-		const animeFile = JSON.parse(await fs.readFile(__dirname + '/anime.json'));
-		const anime = animeFile[id];
-
-		if (anime) {
-			anime.nombre = nombre;
-			anime.genero = genero;
-			anime.anio = anio;
-			anime.autor = autor;
-			await fs.writeFile(__dirname + '/anime.json', JSON.stringify(animeFile, null, 3));
-			res.status(201).render('home', { anime: [anime] });
-		} else {
-			res.status(404).send('No se encontro el anime');
+		const { nombre, genero, anio, autor } = req.query;
+		if (!nombre || !genero || !anio || !autor) {
+			return res.status(400).send({
+				code: 400,
+				error: 'Error en cliente, parametros incompletos o indefinidos',
+			});
 		}
+		const animeFile = await req.animeObj;
+		const id = Object.keys(animeFile).length + 1;
+		const anime = { nombre, genero, anio, autor };
+		const values = Object.values(animeFile).map((anime) => anime.nombre);
+
+		if (values.includes(anime.nombre)) {
+			return res.status(409).send({ code: 409, error: 'El anime ya existe' });
+		}
+		animeFile[id] = anime;
+		await fs.writeFile(__dirname + '/anime.json', JSON.stringify(animeFile, null, 3));
+		return res.status(201).json({ code: 201, message: 'Anime añadido:', anime: animeFile[id] });
 	} catch (error) {
-		console.log(error.message);
-		res.status(500).send(error.message);
+		res.status(500).send({ code: 500, error: error.message });
+	} finally {
+		res.end();
 	}
 });
 
-// Eliminar Anime
+// Actualizar anime: http://localhost:3000/update/6?nombre=Samurai%20X&genero=Shonen&anio=1996&autor=Nobuhiro%20Watsuki
+app.get('/update/:id', async (req, res) => {
+	try {
+		const id = req.params.id;
+		const { nombre, genero, anio, autor } = req.query;
+		if (!nombre || !genero || !anio || !autor) {
+			return res.status(400).send({
+				code: 400,
+				error: 'Error en cliente, parametros incompletos o indefinidos',
+			});
+		}
+		const animeFile = await req.animeObj;
+		const anime = animeFile[id];
+		if (!anime) return res.status(404).send({ code: 404, error: 'Anime no encontrado' });
+
+		anime.nombre = nombre;
+		anime.genero = genero;
+		anime.anio = anio;
+		anime.autor = autor;
+
+		await fs.writeFile(__dirname + '/anime.json', JSON.stringify(animeFile, null, 3));
+		return res
+			.status(200)
+			.json({ code: 201, message: 'Anime actualizado', anime: animeFile[id] });
+	} catch (error) {
+		res.status(500).send({ code: 500, error: error.message });
+	} finally {
+		res.end();
+	}
+});
+
+// Eliminar anime: http://localhost:3000/delete/6
 app.get('/delete/:id', async (req, res) => {
 	const id = req.params.id;
-	try {
-		const animeFile = JSON.parse(await fs.readFile(__dirname + '/anime.json'));
-		const anime = animeFile[id];
+	const animeFile = await req.animeObj;
+	const anime = animeFile[id];
+	if (!anime) return res.status(404).send({ code: 404, error: 'Anime no encontrado' });
 
-		if (anime) {
-			delete animeFile[id];
-			await fs.writeFile(__dirname + '/anime.json', JSON.stringify(animeFile, null, 3));
-			// res.status(201).send('Anime borrado con exito!');
-			res.status(201).render('home', { anime: [anime] });
-		} else {
-			res.status(404).send('No se encontró el Anime');
-		}
+	delete animeFile[id];
+	await fs.writeFile(__dirname + '/anime.json', JSON.stringify(animeFile, null, 3));
+	res.status(201).json({ code: 201, message: `Anime ${id} eliminado` });
+
+	try {
 	} catch (error) {
-		console.log(error);
-		res.status(500).send(error.message);
+		res.status(500).send({ code: 500, error: error.message });
+	} finally {
+		res.end();
 	}
 });
 
-// Busqueda por ID.
-app.get('/:id', async (req, res) => {
-	const id = req.params.id;
-	try {
-		// json convertido a objeto js
-		const animeFile = JSON.parse(await fs.readFile(__dirname + '/anime.json'));
-		const anime = animeFile[id];
-		// console.log(anime);
-
-		// objeto js convertido a matriz clave valor solo para renderizar y mostrar id
-		/* const animeArray = Object.entries(await anime);
-		const animeList = await animeArray.map(([id, anime]) => ({ id, anime }));
-		const newAnime = animeList[id - 1]; */
-
-		if (anime) {
-			res.status(200).render('home', { anime: [anime] });
-		} else {
-			res.status(404).send('Anime no encontrado');
-		}
-	} catch (error) {
-		console.log(error);
-		res.status(500).send(error.message);
-	}
-});
-
-/* // Busqueda por ID.
-app.get('/:id', async (req, res) => {
-	const id = req.params.id;
-	try {
-		const animeFile = JSON.parse(await fs.readFile(__dirname + '/anime.json'));
-		const animeKey = Object.keys(animeFile);
-		const key = animeKey[id - 1];
-		const animeValue = animeFile[id];
-		const newAnimeObj = { id: key, anime: animeValue };
-
-		if (animeValue) {
-			// res.status(200).render('home', { id: key, anime: [animeValue] });
-			res.status(200).render('home', { anime: [newAnimeObj] });
-			console.log([newAnimeObj]);
-		} else {
-			res.status(404).send('Anime no encontrado');
-		}
-	} catch (error) {
-		console.log(error);
-		res.status(500).send(error.message);
-	}
-}); */
-
-// Busqueda por nombre.
-app.get('/search/:name', async (req, res) => {
-	const name = req.params.name.toLowerCase();
-	try {
-		const animeFile = JSON.parse(await fs.readFile(__dirname + '/anime.json'));
-		const anime = Object.values(animeFile);
-		anime.filter((anime) => anime.nombre.toLowerCase().includes(name));
-
-		if (anime.length > 0) {
-			res.status(200).render('home', { anime });
-		} else {
-			res.status(404).send('No se encontraron animes');
-		}
-	} catch (error) {
-		res.status(500).send(error.message);
-	}
-});
-
-app.listen(PORT, () => console.log(`Servidor conectado en ${HOST}:${PORT}/`));
+app.listen(PORT, () => console.log(`Servidor escuchando en el puerto ${PORT}`));
+module.exports = { app };
